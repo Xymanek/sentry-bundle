@@ -1,0 +1,73 @@
+<?xml version="1.0" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <parameters>
+        <parameter key="xymanek_sentry.user_context_provider.client_ip.property_name">ip_address</parameter>
+        <parameter key="xymanek_sentry.user_context_provider.session.property_name">session_data</parameter>
+    </parameters>
+
+    <services>
+        <service class="Xymanek\SentryBundle\HttpFoundationAwareClient" id="xymanek_sentry.client">
+            <argument/><!-- DSN -->
+            <argument/><!-- Options -->
+
+            <call method="setRequestStack">
+                <argument type="service" id="request_stack"/>
+            </call>
+        </service>
+
+        <service id="sentry_client" alias="xymanek_sentry.client"/>
+        <service id="Raven_Client" alias="xymanek_sentry.client"/>
+
+        <service class="Raven_Breadcrumbs_MonologHandler" id="xymanek_sentry.breadcrumbs_handler" public="false">
+            <argument id="xymanek_sentry.client" type="service"/>
+        </service>
+
+        <!-- Context -->
+
+        <service class="Xymanek\SentryBundle\ContextListener"
+                 id="xymanek_sentry.context_listener" public="false">
+            <argument type="service" id="xymanek_sentry.client"/>
+            <argument type="service" id="xymanek_sentry.context_provider.chain"/>
+
+            <tag name="kernel.event_listener" event="kernel.request" method="onKernelRequest"/>
+        </service>
+
+        <service class="Xymanek\SentryBundle\ContextProvider\ChainContextProvider"
+                 id="xymanek_sentry.context_provider.chain" public="false"/>
+
+        <service class="Xymanek\SentryBundle\ContextProvider\TokenContextProvider"
+                 id="xymanek_sentry.context_provider.token" public="false">
+            <argument type="service" id="security.token_storage"/>
+            <argument type="service" id="security.authorization_checker"/>
+
+            <tag name="xymanek_sentry.context_provider.user"/>
+        </service>
+
+        <service class="Xymanek\SentryBundle\ContextProvider\RoleHierarchyContextProvider"
+                 id="xymanek_sentry.context_provider.role_hierarchy" public="false">
+            <argument type="service" id="security.token_storage"/>
+            <argument type="service" id="security.role_hierarchy"/>
+
+            <tag name="xymanek_sentry.context_provider.user"/>
+        </service>
+
+        <service class="Xymanek\SentryBundle\ContextProvider\ClientIpContextProvider"
+                 id="xymanek_sentry.context_provider.client_ip" public="false">
+            <argument type="service" id="request_stack"/>
+            <argument>%xymanek_sentry.context_provider.client_ip.property_name%</argument>
+
+            <tag name="xymanek_sentry.context_provider.user"/>
+        </service>
+
+        <service class="Xymanek\SentryBundle\ContextProvider\SessionContextProvider"
+                 id="xymanek_sentry.context_provider.session" public="false">
+            <argument type="service" id="request_stack"/>
+            <argument>%xymanek_sentry.context_provider.session.property_name%</argument>
+
+            <tag name="xymanek_sentry.context_provider.extra"/>
+        </service>
+    </services>
+</container>

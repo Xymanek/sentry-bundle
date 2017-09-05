@@ -1,2 +1,2 @@
-# sentry-bundle
-Use sentry error reporting with monolog
+# SentryBundle
+Use sentry error reporting with monolog bundle for more flexibility
