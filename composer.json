@@ -1,0 +1,34 @@
+{
+    "name": "xymanek/sentry-bundle",
+    "description": "Use sentry error reporting with monolog bundle for more flexibility",
+    "type": "symfony-bundle",
+    "autoload": {
+        "psr-4": {
+            "Xymanek\\SentryBundle\\": ""
+        }
+    },
+    "require": {
+        "php": "^7.0",
+
+        "sentry/sentry": "^1.7",
+        "symfony/config": "^2.7|^3.0",
+        "symfony/dependency-injection": "^2.7|^3.0",
+        "symfony/event-dispatcher": "^2.7|^3.0",
+        "symfony/http-kernel": "^2.7|^3.0"
+    },
+    "require-dev": {
+        "symfony/security-core": "^2.7|^3.0",
+        "symfony/monolog-bundle": "^3.0",
+        "phpunit/phpunit": "^6.3"
+    },
+    "suggest": {
+        "symfony/security-core": "Include information about currently logged in user"
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Xymanek",
+            "email": "xymanek@outlook.com"
+        }
+    ]
+}
