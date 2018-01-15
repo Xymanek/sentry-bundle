@@ -1,6 +1,9 @@
 <?php
 namespace Xymanek\SentryBundle\DependencyInjection;
 
+use Raven_Client;
+use Raven_Compat;
+use Raven_Processor_SanitizeDataProcessor;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
@@ -32,7 +35,7 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('public_key')->defaultNull()->end()
                         ->scalarNode('project')->defaultValue(1)->end()
                         ->booleanNode('auto_log_stacks')->defaultFalse()->end()
-                        ->scalarNode('name')->defaultValue(\Raven_Compat::gethostname())->end()
+                        ->scalarNode('name')->defaultValue(Raven_Compat::gethostname())->end()
                         ->scalarNode('site')->defaultNull()->end() //
                         ->arrayNode('tags')
                             ->prototype('scalar')->end()
@@ -42,7 +45,7 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('sample_rate')->defaultValue(1)->end()
                         ->booleanNode('trace')->defaultTrue()->end()
                         ->scalarNode('timeout')->defaultValue(2)->end()
-                        ->scalarNode('message_limit')->defaultValue(\Raven_Client::MESSAGE_LIMIT)->end()
+                        ->scalarNode('message_limit')->defaultValue(Raven_Client::MESSAGE_LIMIT)->end()
                         ->arrayNode('exclude')
                             ->prototype('scalar')->end()
                         ->end()
@@ -81,7 +84,7 @@ class Configuration implements ConfigurationInterface
                         ->booleanNode('install_default_breadcrumb_handlers')->defaultFalse()->end() // Default changed
                         ->booleanNode('install_shutdown_handler')->defaultTrue()->end()
                         ->arrayNode('processors')
-                            ->defaultValue([\Raven_Processor_SanitizeDataProcessor::class])
+                            ->defaultValue([Raven_Processor_SanitizeDataProcessor::class])
                             ->prototype('scalar')->end()
                         ->end()
                         ->arrayNode('processorOptions')
@@ -114,6 +117,33 @@ class Configuration implements ConfigurationInterface
                         ->booleanNode('session')->defaultTrue()->end()
 					->end()
 				->end()
+            ->end();
+
+		// Record filter feature
+        $rootNode
+            ->children()
+                ->arrayNode('filters')
+                    ->useAttributeAsKey('name')
+                    ->arrayPrototype()
+                        ->children()
+                            ->arrayNode('filter_exceptions')
+                                ->defaultValue([])
+                                ->treatNullLike([])
+                                ->treatFalseLike([])
+                                ->scalarPrototype()
+                                    ->beforeNormalization()
+                                        ->ifTrue(function ($value) {
+                                            return $value[0] === '\\';
+                                        })
+                                        ->then(function ($value) {
+                                            return substr($value, 1);
+                                        })
+                                    ->end()
+                                ->end()
+                            ->end()
+                        ->end()
+                    ->end()
+                ->end()
             ->end();
 
         return $treeBuilder;
